@@ -158,7 +158,7 @@ sudo apt-get -qq -y install php${NEWVERSION}
 checkerr "$_" "$?"
 
 echo -e "${info} Please wait, installing PHP modules.. "
-sudo apt-get install -qq -y php${NEWVERSION}-cli php${NEWVERSION}-common php${NEWVERSION}-opcache php${NEWVERSION}-mysql php${NEWVERSION}-mbstring  php${NEWVERSION}-zip php${NEWVERSION}-fpm php${NEWVERSION}-intl php${NEWVERSION}-simplexml php${NEWVERSION}-dev
+sudo apt-get install -qq -y php${NEWVERSION}-cli php${NEWVERSION}-common php${NEWVERSION}-opcache php${NEWVERSION}-mysql php${NEWVERSION}-mbstring  php${NEWVERSION}-zip php${NEWVERSION}-fpm php${NEWVERSION}-intl php${NEWVERSION}-simplexml php${NEWVERSION}-dev php${NEWVERSION}-curl php${NEWVERSION}-gd php${NEWVERSION}-soap php${NEWVERSION}-xmlrpc
 checkerr "$_" "$?"
 
 # function to ensure the variable $NEWVERSION is numberic, and convert it if it is not, then check if $NEWVERSION is 8.0 or less go ahead and apt-get install php${NEWVERSION}-json
