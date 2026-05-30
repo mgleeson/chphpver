@@ -1,7 +1,7 @@
 ##############################################################################   
 ## Common functions
 ## common_funcs.inc.sh
-## @author: Matt Gleeson <matt@mattgleeson.net>
+## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @version: 20170605
 ##############################################################################
 
@@ -16,7 +16,7 @@ cf_err_exit ()
 }
 
 ## discourage running of this file directly - requires a var main to be set to 1 in including script
-if [ ${main} -ne 1 ]; then
+if [ "${main:-0}" -ne 1 ]; then
 	echo -e "[\033[01;31m error \033[00m]      This is an include file - do not run directly"
 	cf_err_exit
 fi
@@ -71,20 +71,20 @@ exists () {
             return 0
         fi
     else
-        echo -e "${error} The file or directory ${item} does not exist!"
+        echo -e "${err} The file or directory ${item} does not exist!"
         return 1
     fi
 }
 
 
 isset () {
-    VAR=$1
-    VALUE=$(eval "echo \$$VAR")
-    if [ -z "$VALUE+x" ]
+    VAR="$1"
+    if [ -z "${!VAR+x}" ] || [ -z "${!VAR}" ]
     then
         echo -e "${warn} the var $VAR is not set or is empty"
         return 1
     else
+        VALUE="${!VAR}"
         echo -e "${ok} the var $VAR is set to $VALUE"
         return 0
     fi
