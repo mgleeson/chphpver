@@ -35,31 +35,29 @@ done="[ ${blue}DONE${rst} ] ${space}"
 
 
 checkerr () {
-prog="$1"
-status="$2"
+local prog="$1"
+local status="${2:-1}"
+local nonFatal="${3:-false}"
 
-nonFatal="$3"
-
-if [ ! -n "${nonFatal+x}" ]; then
-                         nonFatal="false"
+if ! [[ "${status}" =~ ^[0-9]+$ ]]; then
+                status=1
 fi
 
-if [ ${status} -eq 0 ]; then
+if [ "${status}" -eq 0 ]; then
                 echo -e "${ok} ${blue}${prog}${rst} ${green}success${rst}"
 
         else
                 echo "" && echo ""
                 echo -e "${err} execution of ${prog} ${red}failed${rst} with status: ${status}"
                 echo "" && echo ""
-                # if [ nonFatal = "false" ]; then
-                        exit 1
-                # else
-                        # return 1
-                # fi
+                if [ "${nonFatal}" = "true" ]; then
+                        return 1
+                fi
+                exit 1
 fi
 }
 
-## set checkerr_loaded var to true to allow scritps or other includes that depend on it to check for it before running
+## set checkerr_loaded var to true to allow scripts or other includes that depend on it to check for it before running
 checkerr_loaded="true"
 echo -e "${ok} checkerr loaded" ; echo
 ##

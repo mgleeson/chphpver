@@ -3,27 +3,20 @@
 ## Change PHP Version
 ## chphpver.sh
 ## @author: Matt Gleeson <matt@mattgleeson.net>
-## @build: 20240422
-## @version: 2.0.0 
+## @build: 20260530
+## @version: 2.0.1
 ##############################################################################   
 
-# set -u
-# set -e errexit
+set -o pipefail
+PATH="${PATH}:/usr/local/sbin:/usr/sbin:/sbin"
 
 main=1
 
 ##########################################################################
 ##### PARAMETERS/ARGUMENTS PRE-CHECKER
-versionno="version: 2.0.0"
-usage="\
-Usage: 	chphpver [-h] [--help] 
-        [-o][--old-version=VERSION] [-n][--new-version=VERSION] [--version]"
-
-# if [ "$#" -lt 2 ]
-# then
-#     echo "${usage}" 1>&2
-#     exit 1
-# fi
+versionno="version: 2.0.1"
+usage="Usage: 	chphpver [-h] [--help]
+        -o VERSION|--old-version=VERSION -n VERSION|--new-version=VERSION [--version]"
 
 #####
 ##########################################################################
@@ -49,32 +42,90 @@ bail ()
 	exit 0
 } 
 
+OLDVERSION=""
+NEWVERSION=""
+
+while [ "$#" -gt 0 ]
+do
+case "$1" in
+    -o=*|--old-version=*)
+    OLDVERSION="${1#*=}"
+	OLDVERSION="${OLDVERSION%/}"
+    shift
+    ;;
+    -o|--old-version)
+    if [ "$#" -lt 2 ]; then
+        echo "${usage}" 1>&2
+        err_exit "missing old PHP version"
+    fi
+    OLDVERSION="${2%/}"
+    shift 2
+    ;;
+    -n=*|--new-version=*)
+    NEWVERSION="${1#*=}"
+	NEWVERSION="${NEWVERSION%/}"
+    shift
+    ;;
+    -n|--new-version)
+    if [ "$#" -lt 2 ]; then
+        echo "${usage}" 1>&2
+        err_exit "missing new PHP version"
+    fi
+    NEWVERSION="${2%/}"
+    shift 2
+    ;;
+    --version|-v)
+         echo "${versionno}"; exit 0 ;;
+    --help|-h)
+         echo "${usage}"; exit 0 ;;
+      -- )     # Stop option processing
+        shift; break ;;
+      - )	# Use stdin as input.
+        break ;;
+      -* )
+        echo "${usage}" 1>&2; exit 1 ;;
+      * )
+        echo "${usage}" 1>&2; exit 1 ;;
+esac
+done
+
+validate_php_version ()
+{
+	version="$1"
+	label="$2"
+
+	if [ -z "${version}" ]; then
+		echo "${usage}" 1>&2
+		err_exit "${label} is required"
+	fi
+
+	if ! [[ "${version}" =~ ^[0-9]+[.][0-9]+$ ]]; then
+		err_exit "${label} must be a PHP version number such as 7.4, 8.1 or 8.3"
+	fi
+}
+
+validate_php_version "${OLDVERSION}" "old PHP version"
+validate_php_version "${NEWVERSION}" "new PHP version"
+
+if [ "${OLDVERSION}" = "${NEWVERSION}" ]; then
+	err_exit "old PHP version and new PHP version must be different"
+fi
+
 #### where are we?
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "${DIR}" ]]; then DIR="${PWD}"; fi
-
-## TODO: do check/download function for other dependencies also 
 
 #### include for error checker function and output colouring
 load_checkerr ()
 {
 
 ## is checkerr here?
-if [ -e ${DIR}/checkerr.inc.sh ]; then
+if [ -e "${DIR}/checkerr.inc.sh" ]; then
 	echo -e "[\033[01;32m  OK  \033[00m]     checkerr found"
 	. "${DIR}/checkerr.inc.sh"
 else
-	echo -e "[\033[01;31m  WARNING  \033[00m]     checkerr not found"
-	echo -e "${info} don't worry, I get it for you... getting..."
-	wget -O checkerr.inc.sh http://bit.ly/checkerr-sh
-	. "${DIR}/checkerr.inc.sh"
-	if [[ "${checkerr_loaded}" == "true" ]] 
-		then
-		echo -e "${ok} checkerr downloaded and loaded"
-	else
-		echo -e "[\033[01;31m  ERROR  \033[00m]      dependency not downloaded and not loaded: checkerr.inc.sh"
-		err_exit
-	fi
+	echo -e "[\033[01;31m  ERROR  \033[00m]      checkerr not found"
+	err_exit "required dependency missing: ${DIR}/checkerr.inc.sh"
 fi
 }
 load_checkerr
@@ -88,55 +139,47 @@ load_checkerr
 ## LOAD COMMON FUNCS
 load_commonfuncs ()
 {
-if [ -e ${DIR}/common_funcs.inc.sh ]; then
+if [ -e "${DIR}/common_funcs.inc.sh" ]; then
 	echo -e "[\033[01;32m  OK  \033[00m]     common_funcs found"
 	. "${DIR}/common_funcs.inc.sh"
 else
-	echo -e "[\033[01;31m  WARNING  \033[00m]     common_funcs not found"
-	echo -e "${info} don't worry, I get it for you... getting..."
-	wget -O common_funcs.inc.sh https://gist.githubusercontent.com/mgleeson/5462af50483740d2c54f2249e9827191/raw/3d03024e535339bbac498d1e4bab347242c89fe6/common_funcs.inc.sh
-	. "${DIR}/common_funcs.inc.sh"
-	if [[ "${common_funcs_loaded}" == "true" ]] 
-		then
-		echo -e "${ok} common_funcs downloaded and loaded"
-	else
-		echo -e "[\033[01;31m  ERROR  \033[00m]      dependency not downloaded and not loaded: common_funcs.inc.sh"
-		err_exit
-	fi
+	echo -e "${err} common_funcs not found"
+	err_exit "required dependency missing: ${DIR}/common_funcs.inc.sh"
 fi
 }
 load_commonfuncs
 ## END LOAD COMMON FUNCS
 ##########################################################################
 
-OLDVERSION=0
-NEWVERSION=0
+SUDO=""
+if [ "$(id -u)" -ne 0 ]; then
+	SUDO="sudo"
+fi
 
-for PARAMS in "$@"
-do
-case $PARAMS in
-    -o=*|--old-version=*)
-    OLDVERSION="${PARAMS#*=}"
-	OLDVERSION=${OLDVERSION%/}
-    shift 
-    ;;
-    -n=*|--new-version=*)
-    NEWVERSION="${PARAMS#*=}"
-	NEWVERSION=${NEWVERSION%/}
-    shift 
-    ;;
-    --version|-v*)
-         echo ${versionno}; shift ;;
-      -- )     # Stop option processing
-        shift; break ;;
-      - )	# Use stdin as input.
-        break ;;
-      -* )
-        echo "${usage}" 1>&2; exit 1 ;;
-      * )
-        break ;;
-esac
-done
+run_privileged ()
+{
+	if [ -n "${SUDO}" ]; then
+		"${SUDO}" "$@"
+	else
+		"$@"
+	fi
+}
+
+toolsneeded=(
+	"apt-cache"
+	"apt-get"
+	"a2dismod"
+	"a2enmod"
+	"dpkg"
+	"service"
+	"update-alternatives"
+)
+
+if [ -n "${SUDO}" ]; then
+	toolsneeded+=("sudo")
+fi
+
+check_externals toolsneeded[@]
 
 echo && echo 
 echo "Old PHP version   = ${OLDVERSION}"
@@ -150,62 +193,99 @@ echo && echo
 # echo "deb https://packages.sury.org/php/ buster main" | sudo tee /etc/apt/sources.list.d/php.list
 
 echo -e "${info} Please wait, updating apt... "
-sudo apt-get -qq update
-checkerr "$_" "$?"
+run_privileged apt-get -qq update
+checkerr "apt-get update" "$?"
 
 echo -e "${info} Please wait, installing PHP version ${NEWVERSION}... "
-sudo apt-get -qq -y install php${NEWVERSION}
-checkerr "$_" "$?"
+run_privileged apt-get -qq -y install "php${NEWVERSION}"
+checkerr "install php${NEWVERSION}" "$?"
+
+php_modules=(
+	"php${NEWVERSION}-cli"
+	"php${NEWVERSION}-common"
+	"php${NEWVERSION}-opcache"
+	"php${NEWVERSION}-mysql"
+	"php${NEWVERSION}-mbstring"
+	"php${NEWVERSION}-zip"
+	"php${NEWVERSION}-fpm"
+	"php${NEWVERSION}-intl"
+	"php${NEWVERSION}-dev"
+	"php${NEWVERSION}-curl"
+	"php${NEWVERSION}-gd"
+	"php${NEWVERSION}-soap"
+	"php${NEWVERSION}-xml"
+)
 
 echo -e "${info} Please wait, installing PHP modules.. "
-sudo apt-get install -qq -y php${NEWVERSION}-cli php${NEWVERSION}-common php${NEWVERSION}-opcache php${NEWVERSION}-mysql php${NEWVERSION}-mbstring  php${NEWVERSION}-zip php${NEWVERSION}-fpm php${NEWVERSION}-intl php${NEWVERSION}-simplexml php${NEWVERSION}-dev php${NEWVERSION}-curl php${NEWVERSION}-gd php${NEWVERSION}-soap php${NEWVERSION}-xmlrpc
-checkerr "$_" "$?"
+run_privileged apt-get install -qq -y "${php_modules[@]}"
+checkerr "install PHP ${NEWVERSION} modules" "$?"
 
-# function to ensure the variable $NEWVERSION is numberic, and convert it if it is not, then check if $NEWVERSION is 8.0 or less go ahead and apt-get install php${NEWVERSION}-json
+install_optional_php_package ()
+{
+	package="$1"
+
+	if apt-cache show "${package}" >/dev/null 2>&1; then
+		echo -e "${info} Please wait, installing optional PHP module ${package}... "
+		run_privileged apt-get -qq -y install "${package}"
+		checkerr "install ${package}" "$?"
+	else
+		echo -e "${warn} optional PHP module ${package} is not available, skipping"
+	fi
+}
+
 install_phpjson() {
-  threshold=8.0
-  if [ -n "$NEWVERSION" -a -n "$threshold" ];then
-    result=$(awk -vn1="$NEWVERSION" -vn2="$threshold" 'BEGIN{print (n1>n2)?1:0 }')
-    if [ "$result" -eq 1 ];then
-        apt-get -qq -y install php${NEWVERSION}-json
-		checkerr "$_" "$?"  
-    fi
-  fi
+	if dpkg --compare-versions "${NEWVERSION}" lt "8.0"; then
+		install_optional_php_package "php${NEWVERSION}-json"
+	fi
 }
 install_phpjson
-checkerr "$_" "$?"
+install_optional_php_package "php${NEWVERSION}-xmlrpc"
 
 # a2dismod disables the php${OLDVERSION} module by removing those symlinks.
 echo -e "${info} disabling old PHP version ${OLDVERSION} "
-sudo a2dismod php${OLDVERSION}
-checkerr "$_" "$?"
+if [ -e "/etc/apache2/mods-available/php${OLDVERSION}.load" ] || [ -e "/etc/apache2/mods-enabled/php${OLDVERSION}.load" ]; then
+	run_privileged a2dismod "php${OLDVERSION}"
+	checkerr "disable Apache PHP ${OLDVERSION} module" "$?"
+else
+	echo -e "${warn} Apache module php${OLDVERSION} not found, skipping disable"
+fi
 
 # a2enmod enables php${NEWVERSION} module within the apache2 configuration.
 echo -e "${info} enabling new PHP version ${NEWVERSION} "
-sudo a2enmod php${NEWVERSION}
-checkerr "$_" "$?"
+run_privileged a2enmod "php${NEWVERSION}"
+checkerr "enable Apache PHP ${NEWVERSION} module" "$?"
 
 # Restart apache2 service.
 echo -e "${info} restarting Apache"
-sudo service apache2 restart
-checkerr "$_" "$?"
+run_privileged service apache2 restart
+checkerr "restart Apache" "$?"
+
+set_php_alternative ()
+{
+	name="$1"
+	target="$2"
+	required="${3:-true}"
+
+	if [ ! -e "${target}" ]; then
+		if [ "${required}" = "true" ]; then
+			err_exit "required alternative target not found: ${target}"
+		fi
+
+		echo -e "${warn} ${target} not found, skipping ${name} alternative"
+		return 0
+	fi
+
+	run_privileged update-alternatives --set "${name}" "${target}"
+	checkerr "update ${name} alternative" "$?"
+}
 
 # Set alternative name path.
-sudo update-alternatives --set php /usr/bin/php${NEWVERSION}
-checkerr "$_" "$?"
-
-sudo update-alternatives --set phar /usr/bin/phar${NEWVERSION}
-checkerr "$_" "$?"
-
-sudo update-alternatives --set phar.phar /usr/bin/phar.phar${NEWVERSION}
-checkerr "$_" "$?"
-
-sudo update-alternatives --set phpize /usr/bin/phpize${NEWVERSION}
-checkerr "$_" "$?"
-
-sudo update-alternatives --set php-config /usr/bin/php-config${NEWVERSION}
-checkerr "$_" "$?"
+set_php_alternative "php" "/usr/bin/php${NEWVERSION}"
+set_php_alternative "phar" "/usr/bin/phar${NEWVERSION}" "false"
+set_php_alternative "phar.phar" "/usr/bin/phar.phar${NEWVERSION}" "false"
+set_php_alternative "phpize" "/usr/bin/phpize${NEWVERSION}"
+set_php_alternative "php-config" "/usr/bin/php-config${NEWVERSION}"
 
 echo && echo
-echo "PHP ${NEWVERSION} now "
+echo "PHP ${NEWVERSION} now enabled"
 echo && echo
