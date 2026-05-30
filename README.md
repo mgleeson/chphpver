@@ -4,7 +4,7 @@
 
 The script updates apt, installs the target PHP version and the common PHP modules I normally need (mostly for the Moodle LMS), disables the old Apache PHP module, enables the new one, restarts Apache, and updates the PHP CLI alternatives.
 
-## Version: v3.1.0
+## Version: v3.2.0
 
 ## Requirements
 
@@ -32,22 +32,28 @@ On Ubuntu, `software-properties-common` is installed if `add-apt-repository` is 
 
 ## Usage
 
-Run a dry run first to check tools, Apache paths, package availability, and repository status without making changes:
+Run a dry run first to check tools, Apache paths, package availability, and repository status without making changes. The current PHP version is detected automatically and used as the old version:
 
 ```bash
-sudo ./chphpver.sh --old-version=7.4 --new-version=8.3 --dry-run
+sudo ./chphpver.sh --new-version=8.3 --dry-run
 ```
 
 Run the switch:
 
 ```bash
-sudo ./chphpver.sh --old-version=7.4 --new-version=8.3
+sudo ./chphpver.sh --new-version=8.3
 ```
 
 Short options are also supported:
 
 ```bash
-sudo ./chphpver.sh -o 7.4 -n 8.3
+sudo ./chphpver.sh -n 8.3
+```
+
+The old PHP version can still be provided explicitly when needed:
+
+```bash
+sudo ./chphpver.sh --old-version=7.4 --new-version=8.3
 ```
 
 Show help:
@@ -66,6 +72,8 @@ Show the script version:
 
 The script expects PHP version numbers in the package-name format used by Debian/Ubuntu, for example `7.4`, `8.1`, `8.2`, or `8.3`.
 
+By default, the old PHP version is detected from the active Apache PHP module. If no active Apache PHP module is found, the script falls back to the current PHP CLI version. Use `--old-version` when the Apache module and CLI version do not match, or when the version needs to be forced explicitly.
+
 Optional PHP modules are installed only when the package exists in apt. This keeps the version switch from failing on modules that are no longer packaged for newer PHP versions.
 
 The repository setup is only attempted when required PHP packages are unavailable after the normal apt metadata update. If the target packages are already available, no repository changes are made.
@@ -73,6 +81,12 @@ The repository setup is only attempted when required PHP packages are unavailabl
 This script is designed for Apache `mod_php`. It installs PHP-FPM because I commonly need it available, but it does not configure sites to use PHP-FPM.
 
 ## Changelog
+
+### v3.2.0 - 2026-05-30
+
+* Added automatic current PHP version detection so `--old-version` is no longer required for normal use.
+* Prefer the active Apache PHP module when detecting the old version, with a PHP CLI fallback when no active Apache module is found.
+* Kept `--old-version` available as an explicit override for hosts where Apache and CLI PHP versions intentionally differ.
 
 ### v3.1.0 - 2026-05-30
 
