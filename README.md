@@ -96,18 +96,18 @@ This script is designed for Apache `mod_php`. It installs PHP-FPM because I comm
 
 ## Changelog
 
-### v3.2.1 - 2026-05-30
+### v3.2.1
 
 * Treated already installed PHP packages as usable during package preflight checks, even when they are no longer available from the current apt repositories.
 * Limited repository bootstrap to required PHP packages that are neither installed nor available.
 
-### v3.2.0 - 2026-05-30
+### v3.2.0
 
 * Added automatic current PHP version detection so `--old-version` is no longer required for normal use.
 * Prefer the active Apache PHP module when detecting the old version, with a PHP CLI fallback when no active Apache module is found.
 * Kept `--old-version` available as an explicit override for hosts where Apache and CLI PHP versions intentionally differ.
 
-### v3.1.0 - 2026-05-30
+### v3.1.0
 
 * Added `--dry-run` to check tools, Apache paths, package availability, and repository status without making changes.
 * Added direct root checks and removed internal `sudo` usage.
@@ -117,7 +117,7 @@ This script is designed for Apache `mod_php`. It installs PHP-FPM because I comm
 * Installed the matching Apache `mod_php` package explicitly before enabling the new Apache PHP module.
 * Updated documentation for dry-run mode, root execution, and repository handling.
 
-### v3.0.0 - 2026-05-30
+### v3.0.0
 
 * Added argument validation so the script no longer falls through to `php0` package/module names when required versions are missing.
 * Added support for both `--old-version=7.4` and `--old-version 7.4` style arguments.
