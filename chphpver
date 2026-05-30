@@ -1,7 +1,7 @@
 #!/bin/bash
 ##############################################################################   
 ## Change PHP Version
-## chphpver.sh
+## chphpver
 ## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @build: 20260530
 ## @version: 3.2.0
