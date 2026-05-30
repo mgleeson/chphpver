@@ -4,6 +4,8 @@
 
 The script updates apt, installs the target PHP version and the common PHP modules I normally need (mostly for the Moodle LMS), disables the old Apache PHP module, enables the new one, restarts Apache, and updates the PHP CLI alternatives.
 
+## Version: v3.1.0
+
 ## Requirements
 
 This script is intended for Debian and current Ubuntu LTS servers running Apache with `mod_php`.
