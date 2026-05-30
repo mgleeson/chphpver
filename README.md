@@ -35,37 +35,37 @@ On Ubuntu, `software-properties-common` is installed if `add-apt-repository` is 
 Run a dry run first to check tools, Apache paths, package availability, and repository status without making changes. The current PHP version is detected automatically and used as the old version:
 
 ```bash
-sudo ./chphpver.sh --new-version=8.3 --dry-run
+sudo ./chphpver --new-version=8.3 --dry-run
 ```
 
 Run the switch:
 
 ```bash
-sudo ./chphpver.sh --new-version=8.3
+sudo ./chphpver --new-version=8.3
 ```
 
 Short options are also supported:
 
 ```bash
-sudo ./chphpver.sh -n 8.3
+sudo ./chphpver -n 8.3
 ```
 
 The old PHP version can still be provided explicitly when needed:
 
 ```bash
-sudo ./chphpver.sh --old-version=7.4 --new-version=8.3
+sudo ./chphpver --old-version=7.4 --new-version=8.3
 ```
 
 Show help:
 
 ```bash
-./chphpver.sh --help
+./chphpver --help
 ```
 
 Show the script version:
 
 ```bash
-./chphpver.sh --version
+./chphpver --version
 ```
 
 ## Notes
