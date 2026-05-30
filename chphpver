@@ -4,7 +4,7 @@
 ## chphpver
 ## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @build: 20260530
-## @version: 3.2.0
+## @version: 3.2.1
 ##############################################################################   
 
 set -o pipefail
@@ -14,7 +14,7 @@ main=1
 
 ##########################################################################
 ##### PARAMETERS/ARGUMENTS PRE-CHECKER
-versionno="version: 3.2.0"
+versionno="version: 3.2.1"
 usage="Usage: 	chphpver [-h] [--help] [--dry-run]
         [-o VERSION|--old-version=VERSION] -n VERSION|--new-version=VERSION [--version]"
 
@@ -197,6 +197,16 @@ package_available ()
 	apt-cache show "$1" >/dev/null 2>&1
 }
 
+package_installed ()
+{
+	dpkg -s "$1" 2>/dev/null | grep -q '^Status: install ok installed$'
+}
+
+package_usable ()
+{
+	package_installed "$1" || package_available "$1"
+}
+
 detect_current_php_version ()
 {
 	detected_version=""
@@ -256,7 +266,7 @@ get_missing_required_php_packages ()
 
 	for package in "${required_php_packages[@]}"
 	do
-		if ! package_available "${package}"; then
+		if ! package_usable "${package}"; then
 			missing_php_packages+=("${package}")
 		fi
 	done
@@ -413,10 +423,12 @@ show_php_package_status ()
 {
 	for package in "${required_php_packages[@]}"
 	do
-		if package_available "${package}"; then
+		if package_installed "${package}"; then
+			echo -e "${ok} ${package} already installed"
+		elif package_available "${package}"; then
 			echo -e "${ok} ${package} available in apt cache"
 		else
-			echo -e "${warn} ${package} not available in apt cache"
+			echo -e "${warn} ${package} not installed or available in apt cache"
 		fi
 	done
 }
@@ -424,15 +436,15 @@ show_php_package_status ()
 ensure_required_php_packages_available ()
 {
 	if get_missing_required_php_packages; then
-		echo -e "${ok} required PHP packages are available"
+		echo -e "${ok} required PHP packages are installed or available"
 		return 0
 	fi
 
-	echo -e "${warn} required PHP packages unavailable: ${missing_php_packages[*]}"
+	echo -e "${warn} required PHP packages not installed or available: ${missing_php_packages[*]}"
 	detect_distro
 
 	if php_repository_configured; then
-		err_exit "required PHP packages are unavailable even though $(repository_label) appears configured: ${missing_php_packages[*]}"
+		err_exit "required PHP packages are not installed or available even though $(repository_label) appears configured: ${missing_php_packages[*]}"
 	fi
 
 	echo -e "${info} $(repository_label) is not configured; adding it now"
@@ -443,10 +455,10 @@ ensure_required_php_packages_available ()
 	checkerr "apt-get update after PHP repository setup" "$?"
 
 	if ! get_missing_required_php_packages; then
-		err_exit "required PHP packages are still unavailable after adding $(repository_label): ${missing_php_packages[*]}"
+		err_exit "required PHP packages are still not installed or available after adding $(repository_label): ${missing_php_packages[*]}"
 	fi
 
-	echo -e "${ok} required PHP packages are available"
+	echo -e "${ok} required PHP packages are installed or available"
 }
 
 run_dry_run ()
@@ -457,9 +469,9 @@ run_dry_run ()
 	show_php_package_status
 
 	if get_missing_required_php_packages; then
-		echo -e "${ok} required PHP packages are available"
+		echo -e "${ok} required PHP packages are installed or available"
 	else
-		echo -e "${warn} required PHP packages unavailable in current apt cache: ${missing_php_packages[*]}"
+		echo -e "${warn} required PHP packages not installed or available on this host: ${missing_php_packages[*]}"
 
 		if php_repository_configured; then
 			echo -e "${warn} $(repository_label) appears to be configured; apt metadata may need to be updated"
@@ -514,7 +526,9 @@ install_optional_php_package ()
 {
 	package="$1"
 
-	if apt-cache show "${package}" >/dev/null 2>&1; then
+	if package_installed "${package}"; then
+		echo -e "${ok} optional PHP module ${package} already installed"
+	elif package_available "${package}"; then
 		echo -e "${info} Please wait, installing optional PHP module ${package}... "
 		apt-get -qq -y install "${package}"
 		checkerr "install ${package}" "$?"
