@@ -1,10 +1,24 @@
 # chphpver
 
-`chphpver` is a small Bash helper I created to help switch an Apache host from one PHP version to another for development servers on Debian/Ubuntu-style systems.
+`chphpver` is a small Bash helper I originally threw together long ago strictly for my own use to quickly switch PHP versions on development servers. 
+Over the years I've refined it and recently figured the degree to which it was a dumpster-fire was perhaps finally reduced to the point it might be of use to people without inspiring someone's villain origin story. Still, please don't use it on production. 
+
+It's intended for use with Ubuntu/Debian based distros using Apache mod_php - I'll probably expand it to work with other configurations in future but that's what it works with for now.
 
 The script updates apt, installs the target PHP version and the common PHP modules I normally need (mostly for the Moodle LMS), disables the old Apache PHP module, enables the new one, restarts Apache, and updates the PHP CLI alternatives.
 
 ## Version: v3.2.0
+
+## Safety Warning!
+
+This script is intended for development systems, test servers, sandboxes, and other environments where a little smoke from the engine bay will not ruin anyone’s day.
+
+It changes PHP packages, Apache modules, apt repositories, and service state. That means it can affect running sites, break local PHP assumptions, restart Apache, or leave a system needing manual cleanup if the host has unusual package conflicts or configuration.
+
+Use this script at your own risk. Review the commands, run `--dry-run` first, take backups, and do not run it on production unless you are confident you understand the impact and have a rollback plan.
+
+In short: this script is a power tool, not a kitchen appliance. Wear eye protection.
+
 
 ## Requirements
 
@@ -111,3 +125,9 @@ This script is designed for Apache `mod_php`. It installs PHP-FPM because I comm
 * Skipped disabling the old Apache module when that module is not present.
 * Added safer handling around update-alternatives targets.
 * Hardened small helper functions used by the main script.
+
+## License
+
+This script is licenced under the [GNU Affero General Public License v3.0](https://github.com/mgleeson/chphpver/blob/main/LICENSE.txt)
+
+THIS SCRIPT IS PROVIDED ON AN "AS IS" BASIS WITHOUT ANY WARRANTIES OF ANY KIND. BY USING THIS SCRIPT, THE USER CONFIRMS THEY HAVE CONDUCTED THEIR OWN DUE DILIGENCE TO VERIFY ITS SUITABILITY AND SAFETY. THE USER VOLUNTARILY ACCEPTS FULL RISK ASSUMPTION FOR ANY DAMAGES OR DATA LOSS ARISING FROM ITS USE.
