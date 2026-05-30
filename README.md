@@ -1,12 +1,14 @@
 # chphpver
 
-`chphpver` is a small Bash helper I created to help switching an Apache host from one PHP version to another for development servers (on Debian/Ubuntu-style systems).
+`chphpver` is a small Bash helper I created to help switch an Apache host from one PHP version to another for development servers on Debian/Ubuntu-style systems.
 
 The script updates apt, installs the target PHP version and the common PHP modules I normally need (mostly for the Moodle LMS), disables the old Apache PHP module, enables the new one, restarts Apache, and updates the PHP CLI alternatives.
 
 ## Requirements
 
-This script is intended for Ubuntu/Debian (or derivative) servers.
+This script is intended for Debian and current Ubuntu LTS servers running Apache with `mod_php`.
+
+Run the script as root. The script checks for root directly and does not use `sudo` internally.
 
 Required commands:
 
@@ -15,22 +17,35 @@ Required commands:
 * `a2dismod`
 * `a2enmod`
 * `dpkg`
+* `grep`
 * `service`
 * `update-alternatives`
-* `sudo`, when not running as root
 
-The PHP packages must already be available from the configured apt repositories. If the target version is provided by a third-party repository such as Ondřej Surý's PHP packages, enable that repository before running this script.
+When the target PHP packages are not available from the current apt repositories, the script can add Ondřej Surý's PHP repository automatically:
+
+* Ubuntu uses `ppa:ondrej/php`.
+* Debian uses `packages.sury.org/php` with the packaged keyring and a signed apt source.
+
+On Ubuntu, `software-properties-common` is installed if `add-apt-repository` is not already available. On Debian, `ca-certificates` and `curl` are installed if the Debian PHP repository needs to be added.
 
 ## Usage
 
+Run a dry run first to check tools, Apache paths, package availability, and repository status without making changes:
+
 ```bash
-./chphpver.sh --old-version=7.4 --new-version=8.3
+sudo ./chphpver.sh --old-version=7.4 --new-version=8.3 --dry-run
+```
+
+Run the switch:
+
+```bash
+sudo ./chphpver.sh --old-version=7.4 --new-version=8.3
 ```
 
 Short options are also supported:
 
 ```bash
-./chphpver.sh -o 7.4 -n 8.3
+sudo ./chphpver.sh -o 7.4 -n 8.3
 ```
 
 Show help:
@@ -51,7 +66,21 @@ The script expects PHP version numbers in the package-name format used by Debian
 
 Optional PHP modules are installed only when the package exists in apt. This keeps the version switch from failing on modules that are no longer packaged for newer PHP versions.
 
+The repository setup is only attempted when required PHP packages are unavailable after the normal apt metadata update. If the target packages are already available, no repository changes are made.
+
+This script is designed for Apache `mod_php`. It installs PHP-FPM because I commonly need it available, but it does not configure sites to use PHP-FPM.
+
 ## Changelog
+
+### v3.1.0 - 2026-05-30
+
+* Added `--dry-run` to check tools, Apache paths, package availability, and repository status without making changes.
+* Added direct root checks and removed internal `sudo` usage.
+* Added Debian/Ubuntu distro detection for automatic PHP repository setup.
+* Added automatic setup for Ondřej Surý's PHP repositories when required PHP packages are unavailable from the current apt repositories.
+* Added required PHP package checks before installation so missing packages fail earlier and with clearer output.
+* Installed the matching Apache `mod_php` package explicitly before enabling the new Apache PHP module.
+* Updated documentation for dry-run mode, root execution, and repository handling.
 
 ### v3.0.0 - 2026-05-30
 
