@@ -1,8 +1,8 @@
 # chphpver
 
-`chphpver` is a small Bash helper I use to switch an Apache host from one PHP version to another on Debian/Ubuntu-style systems.
+`chphpver` is a small Bash helper created to switch an Apache host from one PHP version to another on Debian/Ubuntu-style systems.
 
-The script updates apt, installs the target PHP version and the common PHP modules I normally need, disables the old Apache PHP module, enables the new one, restarts Apache, and updates the PHP CLI alternatives.
+The script updates apt, installs the target PHP version and the common PHP modules I normally need (mostly for the Moodle LMS), disables the old Apache PHP module, enables the new one, restarts Apache, and updates the PHP CLI alternatives.
 
 ## Requirements
 
