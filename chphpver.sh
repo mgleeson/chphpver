@@ -2,7 +2,7 @@
 ##############################################################################   
 ## Change PHP Version
 ## chphpver.sh
-## @author: Matt Gleeson <dev@mattgleeson.net>
+## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @build: 20260530
 ## @version: 3.0.0
 ##############################################################################   
