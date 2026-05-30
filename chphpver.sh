@@ -4,7 +4,7 @@
 ## chphpver.sh
 ## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @build: 20260530
-## @version: 3.1.0
+## @version: 3.2.0
 ##############################################################################   
 
 set -o pipefail
@@ -14,9 +14,9 @@ main=1
 
 ##########################################################################
 ##### PARAMETERS/ARGUMENTS PRE-CHECKER
-versionno="version: 3.1.0"
+versionno="version: 3.2.0"
 usage="Usage: 	chphpver [-h] [--help] [--dry-run]
-        -o VERSION|--old-version=VERSION -n VERSION|--new-version=VERSION [--version]"
+        [-o VERSION|--old-version=VERSION] -n VERSION|--new-version=VERSION [--version]"
 
 #####
 ##########################################################################
@@ -107,12 +107,10 @@ validate_php_version ()
 	fi
 }
 
-validate_php_version "${OLDVERSION}" "old PHP version"
-validate_php_version "${NEWVERSION}" "new PHP version"
-
-if [ "${OLDVERSION}" = "${NEWVERSION}" ]; then
-	err_exit "old PHP version and new PHP version must be different"
+if [ -n "${OLDVERSION}" ]; then
+	validate_php_version "${OLDVERSION}" "old PHP version"
 fi
+validate_php_version "${NEWVERSION}" "new PHP version"
 
 #### where are we?
 DIR="${BASH_SOURCE%/*}"
@@ -171,12 +169,6 @@ toolsneeded=(
 
 check_externals toolsneeded[@]
 
-echo && echo 
-echo "Old PHP version   = ${OLDVERSION}"
-echo "New PHP version   = ${NEWVERSION}"
-echo "Dry run           = ${DRY_RUN}"
-echo && echo
-
 php_modules=(
 	"php${NEWVERSION}-cli"
 	"php${NEWVERSION}-common"
@@ -204,6 +196,59 @@ REPO_TYPE=""
 package_available ()
 {
 	apt-cache show "$1" >/dev/null 2>&1
+}
+
+detect_current_php_version ()
+{
+	detected_version=""
+	detected_count=0
+
+	for module in /etc/apache2/mods-enabled/php*.load
+	do
+		[ -e "${module}" ] || [ -L "${module}" ] || continue
+		module_name="${module##*/}"
+		module_version="${module_name#php}"
+		module_version="${module_version%.load}"
+
+		if [[ "${module_version}" =~ ^[0-9]+[.][0-9]+$ ]]; then
+			detected_version="${module_version}"
+			detected_count=$((detected_count+1))
+		fi
+	done
+
+	if [ "${detected_count}" -eq 1 ]; then
+		OLDVERSION="${detected_version}"
+		echo -e "${ok} detected active Apache PHP version ${OLDVERSION}"
+		return 0
+	fi
+
+	if [ "${detected_count}" -gt 1 ]; then
+		err_exit "multiple active Apache PHP modules found; specify --old-version explicitly"
+	fi
+
+	if cmdexist php; then
+		detected_version="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;' 2>/dev/null || true)"
+		if [[ "${detected_version}" =~ ^[0-9]+[.][0-9]+$ ]]; then
+			OLDVERSION="${detected_version}"
+			echo -e "${warn} active Apache PHP module not found; using current PHP CLI version ${OLDVERSION}"
+			return 0
+		fi
+	fi
+
+	err_exit "unable to detect current PHP version; specify --old-version explicitly"
+}
+
+ensure_old_php_version ()
+{
+	if [ -z "${OLDVERSION}" ]; then
+		detect_current_php_version
+	fi
+
+	validate_php_version "${OLDVERSION}" "old PHP version"
+
+	if [ "${OLDVERSION}" = "${NEWVERSION}" ]; then
+		err_exit "old PHP version and new PHP version must be different"
+	fi
 }
 
 get_missing_required_php_packages ()
@@ -437,6 +482,14 @@ run_dry_run ()
 	echo && echo "Dry run complete. No changes made." && echo
 	exit 0
 }
+
+ensure_old_php_version
+
+echo && echo
+echo "Old PHP version   = ${OLDVERSION}"
+echo "New PHP version   = ${NEWVERSION}"
+echo "Dry run           = ${DRY_RUN}"
+echo && echo
 
 if [ "${DRY_RUN}" = "true" ]; then
 	run_dry_run
