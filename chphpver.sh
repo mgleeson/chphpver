@@ -2,9 +2,9 @@
 ##############################################################################   
 ## Change PHP Version
 ## chphpver.sh
-## @author: Matt Gleeson <matt@mattgleeson.net>
+## @author: Matt Gleeson <dev@mattgleeson.net>
 ## @build: 20260530
-## @version: 2.0.1
+## @version: 3.0.0
 ##############################################################################   
 
 set -o pipefail
@@ -14,7 +14,7 @@ main=1
 
 ##########################################################################
 ##### PARAMETERS/ARGUMENTS PRE-CHECKER
-versionno="version: 2.0.1"
+versionno="version: 3.0.0"
 usage="Usage: 	chphpver [-h] [--help]
         -o VERSION|--old-version=VERSION -n VERSION|--new-version=VERSION [--version]"
 
