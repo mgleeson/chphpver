@@ -130,7 +130,6 @@ else
 fi
 }
 load_checkerr
-## TODO: make checker universal and pass script name via argument
 
 ## END ERR HANDLING
 ##########################################################################
