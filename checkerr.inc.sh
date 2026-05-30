@@ -1,9 +1,9 @@
 ###########################################################################################
 ## checkerr - check for error on previous execution & output colouring
 ##
-## @author: Matt Gleeson <dev@mattgleeson.net>
+## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @description: for error checking of immediately previous command & output colouring
-## @version: 20161115-20170605
+## @version: 20161115-20170605a
 ## @usage: for output colouring eg.
 ##      echo -e "${err} error msg ${yellow}this will be yellow${rst} this will be normal"
 ##      echo -e "${warn} a warning ${red}this will be red${rst}"
@@ -15,7 +15,7 @@
 ## after the command - more descriptive messages can be specified in place of $_ if needed:
 ##
 ## checkerr "$_" "$?"
-##
+###########################################################################################
 
 
 red='\033[01;31m'
