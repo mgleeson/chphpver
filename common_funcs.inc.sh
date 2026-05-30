@@ -1,7 +1,7 @@
 ##############################################################################   
 ## Common functions
 ## common_funcs.inc.sh
-## @author: Matt Gleeson <dev@mattgleeson.net>
+## @author: Matt Gleeson <https://github.com/mgleeson/chphpver>
 ## @version: 20170605
 ##############################################################################
 
