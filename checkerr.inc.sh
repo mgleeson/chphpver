@@ -1,7 +1,7 @@
 ###########################################################################################
 ## checkerr - check for error on previous execution & output colouring
 ##
-## @author: Matt Gleeson <matt@mattgleeson.net>
+## @author: Matt Gleeson <dev@mattgleeson.net>
 ## @description: for error checking of immediately previous command & output colouring
 ## @version: 20161115-20170605
 ## @usage: for output colouring eg.
