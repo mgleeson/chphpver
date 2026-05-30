@@ -1,7 +1,7 @@
 ##############################################################################   
 ## Common functions
 ## common_funcs.inc.sh
-## @author: Matt Gleeson <matt@mattgleeson.net>
+## @author: Matt Gleeson <dev@mattgleeson.net>
 ## @version: 20170605
 ##############################################################################
 
